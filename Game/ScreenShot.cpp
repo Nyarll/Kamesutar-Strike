@@ -36,3 +36,24 @@ void SaveScreenShotToPng(int x1, int y1, int x2, int y2)
 		}
 	}
 }
+
+void SaveScreenShotToJpg(int x1, int y1, int x2, int y2)
+{
+
+	int i;
+
+	if (CheckExistenceOfFolder("ScreenShot"))	// ScreenShot というフォルダがあるか確認
+	{
+		_mkdir("ScreenShot");	// 無ければ作る
+	}
+	for (i = 0; i < 1000; i++)
+	{
+		char str[64];
+		sprintf(str, "ScreenShot/shot%03d.jpg", i);
+		if (PathFileExists(str) == 0)
+		{
+			SaveDrawScreenToPNG(x1, y1, x2, y2, str);
+			break;
+		}
+	}
+}

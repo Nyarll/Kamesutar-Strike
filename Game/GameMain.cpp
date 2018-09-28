@@ -108,7 +108,7 @@ void RenderGame(void)
 
 	if ((key[KEY_INPUT_P] == 1) && (key_old[KEY_INPUT_P] != 1))
 	{
-		SaveScreenShotToPng(0, 0, SCREEN_RIGHT, SCREEN_BOTTOM);
+		SaveScreenShotToJpg(0, 0, SCREEN_RIGHT, SCREEN_BOTTOM);
 	}
 
 	GetHitKeyStateAll(key_old);
