@@ -92,6 +92,7 @@
   <!-- ソースファイル -->
   <ItemGroup>
     <ClCompile Include="Game\Collision.cpp" />
+    <ClCompile Include="Game\ScreenShot.cpp" />
     <ClCompile Include="Game\Vector.cpp" />
     <ClCompile Include="Libraries\GameLibrary\GameLibGraphics.cpp" />
     <ClCompile Include="Libraries\GameLibrary\GameLibInput.cpp" />
@@ -104,6 +105,7 @@
   <!-- ヘッダファイル -->
   <ItemGroup>
     <ClInclude Include="Game\Collision.h" />
+    <ClInclude Include="Game\ScreenShot.h" />
     <ClInclude Include="Game\Vector.h" />
     <ClInclude Include="Libraries\GameLibrary\GameLib.h" />
     <ClInclude Include="Libraries\GameLibrary\GameLibGraphics.h" />

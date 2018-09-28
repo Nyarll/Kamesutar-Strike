@@ -64,6 +64,9 @@
     <ClCompile Include="Game\Collision.cpp">
       <Filter>ゲーム</Filter>
     </ClCompile>
+    <ClCompile Include="Game\ScreenShot.cpp">
+      <Filter>ゲーム</Filter>
+    </ClCompile>
   </ItemGroup>
   <!-- ヘッダファイル -->
   <ItemGroup>
@@ -95,6 +98,9 @@
       <Filter>ゲーム</Filter>
     </ClInclude>
     <ClInclude Include="Game\Collision.h">
+      <Filter>ゲーム</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\ScreenShot.h">
       <Filter>ゲーム</Filter>
     </ClInclude>
   </ItemGroup>

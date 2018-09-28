@@ -14,6 +14,7 @@
 #include "GameMain.h"
 #include "Vector.h"
 #include "Collision.h"
+#include "../ScreenShot.h"
 #include <math.h>
 
 
@@ -35,6 +36,9 @@ Vector2D circle_pos;
 
 Vector2D box_pos;
 float box_angle;
+
+char key[256];
+char key_old[256];
 
 // グローバル変数の定義 ====================================================
 
@@ -68,6 +72,7 @@ void UpdateGame(void)
 	static const float rad_1 = DEG_TO_RAD(1);
 	int x, y;
 	GetMousePoint(&x, &y);
+	GetHitKeyStateAll(key);
 	mouse.x = (float)x;	mouse.y = (float)y;
 
 	circle_pos = Vect2Rota(&circle_pos, rad_1);
@@ -100,6 +105,13 @@ void RenderGame(void)
 		SetFontSize(40);
 		DrawFormatString(SCREEN_CENTER_X - 40, SCREEN_CENTER_Y - 20, COLOR_WHITE, "HIT !");
 	}
+
+	if ((key[KEY_INPUT_P] == 1) && (key_old[KEY_INPUT_P] != 1))
+	{
+		SaveScreenShotToPng(0, 0, SCREEN_RIGHT, SCREEN_BOTTOM);
+	}
+
+	GetHitKeyStateAll(key_old);
 }
 
 // ゲームの終了処理
