@@ -90,6 +90,8 @@ void RenderGame(void)
 	Vector2D m_p = Vect2Sub(&cpos, &box_pos);
 	Vector2D temp = Vect2Add(&box_pos, &Vect2Rota(&m_p, -box_angle));
 
+	static char name[256] = {0};
+
 	if (BoxCollision(temp.x, temp.y, 3, 3, box_pos.x, box_pos.y, 120, 120))
 	{
 		b_color = 0xff0000ff;
@@ -106,10 +108,12 @@ void RenderGame(void)
 		DrawFormatString(SCREEN_CENTER_X - 40, SCREEN_CENTER_Y - 20, COLOR_WHITE, "HIT !");
 	}
 
+	static int change_flag = FALSE;
 	if ((key[KEY_INPUT_P] == 1) && (key_old[KEY_INPUT_P] != 1))
 	{
-		SaveScreenShotToJpg(0, 0, SCREEN_RIGHT, SCREEN_BOTTOM);
+		SaveScreenShotToPng(0, 0, SCREEN_RIGHT, SCREEN_BOTTOM, name, &change_flag);
 	}
+	DrawSaveScreenShotLog(name, &change_flag);
 
 	GetHitKeyStateAll(key_old);
 }
