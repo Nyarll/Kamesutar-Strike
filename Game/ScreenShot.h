@@ -1,6 +1,6 @@
 #pragma once
 
-void DrawSaveScreenShotLog(const char* file_name, int* change_flag);
+void DrawSaveScreenShotLog(const char* file_name, int* change_flag = FALSE);
 
 // ˆø” : B‰e‚·‚é”ÍˆÍ
 // •`‰æŒã‚Ìˆê”ÔÅŒã‚ÉŒÄ‚Ô

@@ -1,5 +1,6 @@
 
 #include "Collision.h"
+#include <math.h>
 
 //円同士の衝突
 //(円1の半径, 円2の半径, 円1のx座標, 円2のx座標, 円1のy座標, 円2のy座標)
@@ -62,4 +63,21 @@ BOOL LineCollision(double line_a1, double line_a2, double line_b1, double line_b
 	{
 		return FALSE;
 	}
+}
+
+bool CalcParticleColliAfterPos(Vector2D* pos1,Vector2D* pos2,Vector2D* vel1, Vector2D* vel2,
+	float r1, float r2)
+{
+	Vector2D p1p2 = Vect2Sub(pos2, pos1);	// パーティクル１とパーティクル２の最短距離のベクトル
+	Vector2D C = Vect2Normalize(p1p2);		// p1p2 ベクトルを正規化したベクトル
+	float len = sqrt(p1p2.x * p1p2.x + p1p2.y * p1p2.y);
+	float distance = (r1 + r2) - len;
+	float vlen1, vlen2;
+
+	vlen1 = Vect2Length(*vel1);	vlen2 = Vect2Length(*vel2);
+
+	*vel2 = Vect2Mul(&C, (double)vlen2);
+	*vel1 = Vect2Mul(&Vect2Mul(&C,(-1)), (double)vlen1);
+	
+	return true;
 }

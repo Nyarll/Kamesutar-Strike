@@ -31,6 +31,16 @@
 
 
 // 構造体の定義 ============================================================
+typedef struct
+{
+	Vector2D pos;
+	Vector2D vel;
+	float r;
+}Circle;
+
+
+
+// グローバル変数の定義 ====================================================
 Vector2D mouse;
 Vector2D circle_pos;
 
@@ -40,10 +50,7 @@ float box_angle;
 char key[256];
 char key_old[256];
 
-// グローバル変数の定義 ====================================================
-
-
-
+Circle c[2];
 
 // プロトタイプ宣言 ========================================================
 
@@ -51,6 +58,12 @@ void InitializeGame(void);  // ゲームの初期化処理
 void UpdateGame(void);      // ゲームの更新処理
 void RenderGame(void);      // ゲームの描画処理
 void FinalizeGame(void);    // ゲームの終了処理
+
+void Update1(void);
+void Render1(void);
+
+void Update2(void);
+void Render2(void);
 
 void DrawBoxQuad(Vector2D pos, int siz_x, int siz_y, double rad, UINT color, int fill);
 
@@ -63,10 +76,13 @@ void InitializeGame(void)
 	circle_pos = Vector2D_Create(100, 0);
 	box_pos = Vector2D_Create(SCREEN_CENTER_X, SCREEN_CENTER_Y);
 	box_angle = 0;
+
+	c[0].pos = { 60, 60 };	c[1].pos = { SCREEN_RIGHT - 60, SCREEN_BOTTOM - 60 };
+	c[0].vel = { 5,1 };		c[1].vel = { -3,-2 };
+	c[0].r = 30;			c[1].r = 50;
 }
 
-// ゲームの更新処理
-void UpdateGame(void)
+void Update1(void)
 {
 	static double  deg = 0;
 	static const float rad_1 = DEG_TO_RAD(1);
@@ -79,9 +95,7 @@ void UpdateGame(void)
 
 	box_angle += rad_1;
 }
-
-// ゲームの描画処理
-void RenderGame(void)
+void Render1(void)
 {
 	UINT color = 0xffff0000;
 	UINT b_color = 0xffff00ff;
@@ -90,7 +104,7 @@ void RenderGame(void)
 	Vector2D m_p = Vect2Sub(&cpos, &box_pos);
 	Vector2D temp = Vect2Add(&box_pos, &Vect2Rota(&m_p, -box_angle));
 
-	static char name[256] = {0};
+	static char name[256] = { 0 };
 
 	if (BoxCollision(temp.x, temp.y, 3, 3, box_pos.x, box_pos.y, 120, 120))
 	{
@@ -100,7 +114,7 @@ void RenderGame(void)
 	DrawBoxQuad(box_pos, 120, 120, box_angle, b_color, TRUE);
 
 	DrawLine(mouse.x, mouse.y, mouse.x + circle_pos.x, mouse.y + circle_pos.y, color);
-	DrawCircle(cpos.x,cpos.y, 3, color);
+	DrawCircle(cpos.x, cpos.y, 3, color);
 
 	if (BoxCollision(temp.x, temp.y, 3, 3, box_pos.x, box_pos.y, 120, 120))
 	{
@@ -116,6 +130,54 @@ void RenderGame(void)
 	DrawSaveScreenShotLog(name, &change_flag);
 
 	GetHitKeyStateAll(key_old);
+}
+
+void Update2(void)
+{
+	
+	if (CircleCollision(c[0].r, c[1].r, c[0].pos.x, c[1].pos.x, c[0].pos.y, c[1].pos.y))
+	{
+		CalcParticleColliAfterPos(&c[0].pos, &c[1].pos, &c[0].vel, &c[1].vel, c[0].r, c[1].r);
+	}
+
+	for (int i = 0; i < 2; i++)
+	{
+		Vector2D temp = c[i].pos;
+
+		c[i].pos = Vect2Add(&c[i].pos, &c[i].vel);
+
+		if ((c[i].pos.x - c[i].r < SCREEN_LEFT) || (c[i].pos.x + c[i].r > SCREEN_RIGHT))
+		{
+			c[i].vel.x *= (-1);
+			c[i].pos = temp;
+		}
+		if ((c[i].pos.y - c[i].r < SCREEN_TOP) || (c[i].pos.y + c[i].r > SCREEN_BOTTOM))
+		{
+			c[i].vel.y *= (-1);
+			c[i].pos = temp;
+		}
+	}
+}
+void Render2(void)
+{
+	int i;
+
+	for (i = 0; i < 2; i++)
+	{
+		DrawCircle((int)c[i].pos.x, (int)c[i].pos.y, (int)c[i].r, COLOR_RED);
+	}
+}
+
+// ゲームの更新処理
+void UpdateGame(void)
+{
+	Update2();
+}
+
+// ゲームの描画処理
+void RenderGame(void)
+{
+	Render2();
 }
 
 // ゲームの終了処理
