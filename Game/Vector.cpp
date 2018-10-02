@@ -3,7 +3,7 @@
 #include <math.h>
 
 // 2DÉxÉNÉgÉãÇÃçÏê¨
-Vector2D Vector2D_Create(float x, float y)
+Vector2D Vect2Create(float x, float y)
 {
 	Vector2D v;
 	v.x = x;
@@ -47,7 +47,7 @@ Vector2D Vect2Rota(Vector2D* vec, const float r)
 {
 	float sc = Vect2Length(*vec);
 	float angle = Vect2Angle(vec);
-	return Vector2D_Create(cosf(angle + r) * sc, sinf(angle + r) * sc);
+	return Vect2Create(cosf(angle + r) * sc, sinf(angle + r) * sc);
 }
 
 
@@ -79,4 +79,20 @@ float Vect2Dot(Vector2D v0, Vector2D vec)
 float Vect2Cross(Vector2D v0, Vector2D vec)
 {
 	return ((v0.x * vec.x) - (v0.y * vec.y));
+}
+
+void Vect2Decompose(Vector2D* vec, Vector2D* angle, Vector2D* vec_a, Vector2D* vec_b)
+{
+	float angle_rota = Vect2Angle(angle);
+	float vec_rota = Vect2Angle(vec);
+	float diff_rota = vec_rota - angle_rota;
+	float vec_length = Vect2Length(*vec);
+
+	float vec_a_length = vec_length * cosf(diff_rota);
+	float vec_b_length = vec_length * sinf(diff_rota);
+	float vec_a_rota = angle_rota;
+	float vec_b_rota = angle_rota + (float)M_PI_2;
+
+	*vec_a = Vect2Create(vec_a_length * cosf(vec_a_rota), vec_a_length * sinf(vec_a_rota));
+	*vec_b = Vect2Create(vec_b_length * cosf(vec_b_rota), vec_b_length * sinf(vec_b_rota));
 }

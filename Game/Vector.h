@@ -18,7 +18,7 @@ typedef Vector2D Point2D;
 typedef Vector3D Point3D;
 
 // 2Dベクトルの作成
-Vector2D Vector2D_Create(float x, float y);
+Vector2D Vect2Create(float x, float y);
 
 // 2Dベクトル同士の加算
 Vector2D Vect2Add(Vector2D* vec1, const Vector2D* vec2);
@@ -42,4 +42,5 @@ Vector2D Vect2Normalize(Vector2D vec);
 float Vect2Dot(Vector2D v0, Vector2D vec);
 // 2Dベクトル同士の外積
 float Vect2Cross(Vector2D v0, Vector2D vec);
-
+// 2Dベクトルの分解
+void Vect2Decompose(Vector2D* vec, Vector2D* angle, Vector2D* vec_a, Vector2D* vec_b);
