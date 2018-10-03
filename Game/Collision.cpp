@@ -112,7 +112,7 @@ bool CircleColliAfterRotateVel(Vector2D* pos1, Vector2D* pos2,
 		// 移動先の角度
 		Vector2D angle = Vect2Create(pos2->x - pos1->x, pos2->y - pos1->y);
 
-		// 質量 によって変わる
+		// 質量 によって変わる？
 
 		{
 			// 分解後のベクトル
