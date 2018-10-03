@@ -29,10 +29,12 @@
 
 #define MAX_VEL (4.0)
 
+#define FRICTION (0.98f)
+
 
 // Kamesuta's
 // オブジェクトの数
-#define NUM_OBJECTS 10
+#define NUM_OBJECTS 30
 // サウンドの数
 #define NUM_SOUNDS 8
 // 画像の大きさ
@@ -76,6 +78,8 @@ typedef struct
 	float rota;				// 回転
 	float scale;			// 倍率
 	Vector2D hitsize;		// 半径とか
+
+	float m;				// 質量
 } GameObject;
 
 // グローバル変数の定義 ====================================================
@@ -106,6 +110,10 @@ HSND g_sounds[NUM_SOUNDS];
 // 必ず鳴るサウンド
 HSND g_sound_hit;
 
+int mouse_input;
+Vector2D mpoint1;
+short strike;
+
 // プロトタイプ宣言 ========================================================
 
 void InitializeGame(void);  // ゲームの初期化処理
@@ -120,11 +128,15 @@ void Update2(void);
 void Render2(void);
 
 void DrawBoxQuad(Vector2D pos, int siz_x, int siz_y, double rad, UINT color, int fill);
+void DrawArrow(Vector2D p1, Vector2D p2, UINT color);
 
 // Kamesuta系
 void InitKame(void);
 void UpdateKame(void);
 void RenderKame(void);
+
+void UpdateKamesutarStrike(void);
+void RenderKamesutarStrike(void);
 
 // 関数の定義 ==============================================================
 
@@ -155,13 +167,20 @@ void InitKame(void)
 		obj->sprite_back = obj->sprite_front;
 		obj->sprite_back.texture = g_texture_back;
 		obj->pos = { (float)GetRand(SCREEN_WIDTH), (float)GetRand(SCREEN_HEIGHT) };
-		obj->vel = { (float)GetRand(10) - 5, (float)GetRand(10) - 5 };
+		obj->vel = { 0,0 };
 		obj->color = { GetRand(255), GetRand(255), GetRand(255) };
-		obj->r_vel = DEG_TO_RAD(30);	// NEW !!
+		obj->r_vel = 0;	// NEW !!
 		obj->rota = 0;
 		obj->scale = (GetRand(100) / 100.f + .5f)*.25f;
 		obj->hitsize = { (IMAGE_SIZE - 20)*obj->scale , (IMAGE_SIZE - 20)*obj->scale };
+
+		if (obj->hitsize.x < 10)
+			obj->m = obj->hitsize.x;
+		else
+			obj->m = obj->hitsize.x / 10;
 	}
+
+	strike = FALSE;
 }
 
 // ゲームの初期化処理
@@ -299,7 +318,7 @@ void UpdateKame(void)
 						float hit2 = obj2->hitsize.x / 2;
 						//if (CircleColliAfterVel(&obj->pos, &obj2->pos, &obj->vel, &obj2->vel, hit1, hit2))
 						if (CircleColliAfterRotateVel(&obj->pos, &obj2->pos, &obj->vel, &obj2->vel,
-							hit1, hit2, &obj->r_vel, &obj2->r_vel))
+							hit1, hit2, &obj->r_vel, &obj2->r_vel,obj->m,obj2->m))
 						{
 							// 効果音を鳴らす
 							PlaySoundMem(g_sound_hit, DX_PLAYTYPE_BACK);
@@ -349,10 +368,6 @@ void UpdateKame(void)
 		}
 		{
 			obj->rota += obj->r_vel;
-			if (obj->rota > DEG_TO_RAD(360) || obj->rota < DEG_TO_RAD(0))
-			{
-				obj->rota = 0;
-			}
 		}
 	}
 }
@@ -394,18 +409,171 @@ void RenderKame(void)
 		);
 	}
 }
+
+void UpdateKamesutarStrike(void)
+{
+	mouse_input = GetMouseInput();
+	static int m_input_old = 0;
+	// マウスの座標取得
+	int m_x, m_y;
+	GetMousePoint(&m_x, &m_y);
+	mouse = Vect2Create((float)m_x, (float)m_y);
+
+	static Vector2D power = Vect2Create(0, 0);
+
+	if ((MOUSE_INPUT_LEFT == mouse_input) && (m_input_old == 0))
+	{
+		mpoint1 = mouse;
+	}
+
+	for (int i = 0; i < NUM_OBJECTS; i++)
+	{
+		GameObject* obj = &g_objects[i];
+
+		if (CircleCollision(1, obj->hitsize.x / 2, mpoint1.x, obj->pos.x, mpoint1.y, obj->pos.y))
+		{
+			float rad = Vect2Angle(&Vect2Sub(&obj->pos, &mouse));
+			if ((MOUSE_INPUT_LEFT == mouse_input) && (m_input_old == MOUSE_INPUT_LEFT))
+			{
+				power = Vect2Sub(&Vect2Add(&mpoint1, &Vect2Sub(&mpoint1, &mouse)), &mouse);
+			}
+			else if ((0 == mouse_input) && (m_input_old == MOUSE_INPUT_LEFT))
+			{
+				obj->vel = Vect2Div(&power, 5.0);
+				obj->r_vel = rad;
+				power = Vect2Create(0, 0);
+			}
+		}
+
+		{
+			obj->vel = Vect2Mul(&obj->vel, FRICTION);
+			obj->r_vel *= FRICTION;
+			Vector2D temp = Vect2AbsoluteValue(&obj->vel);
+			if (temp.x < 0.1f)obj->vel.x = 0.0f;
+			if (temp.y < 0.1f)obj->vel.y = 0.0f;
+			
+			obj->pos = Vect2Add(&obj->pos, &obj->vel);
+			obj->rota += obj->r_vel;
+		}
+
+		{
+			// オブジェクトに対しての壁の位置
+			float padding_left = SCREEN_LEFT + obj->hitsize.x / 2;
+			float padding_right = SCREEN_RIGHT - obj->hitsize.x / 2;
+			float padding_top = SCREEN_TOP + obj->hitsize.y / 2;
+			float padding_bottom = SCREEN_BOTTOM - obj->hitsize.y / 2;
+
+			// 範囲を超えたら
+			if (obj->pos.x < padding_left || padding_right <= obj->pos.x)
+			{
+				// 効果音を鳴らす
+				PlaySoundMem(g_sound_hit, DX_PLAYTYPE_BACK);
+				if (GetRand(10) == 0)
+					// たまに別の音を混ぜる
+					PlaySoundMem(g_sounds[GetRand(NUM_SOUNDS - 1)], DX_PLAYTYPE_BACK);
+				// 速度を反対にする
+				obj->vel.x *= -1;
+			}
+			if (obj->pos.y < padding_top || padding_bottom <= obj->pos.y)
+			{
+				// 効果音を鳴らす
+				PlaySoundMem(g_sound_hit, DX_PLAYTYPE_BACK);
+				if (GetRand(10) == 0)
+					// たまに別の音を混ぜる
+					PlaySoundMem(g_sounds[GetRand(NUM_SOUNDS - 1)], DX_PLAYTYPE_BACK);
+				// 速度を反対にする
+				obj->vel.y *= -1;
+			}
+			// はみ出し修正
+			obj->pos.x = ClampF(obj->pos.x, padding_left, padding_right);
+			obj->pos.y = ClampF(obj->pos.y, padding_top, padding_bottom);
+		}
+
+		// Kame 同士の当たり判定
+		{
+			for (int j = 0; j < NUM_OBJECTS; j++)
+			{
+				if (i != j)
+				{
+					GameObject* obj2 = &g_objects[j];
+					float hit1 = obj->hitsize.x / 2;
+					float hit2 = obj2->hitsize.x / 2;
+					//if (CircleColliAfterVel(&obj->pos, &obj2->pos, &obj->vel, &obj2->vel, hit1, hit2))
+					if (CircleColliAfterRotateVel(&obj->pos, &obj2->pos, &obj->vel, &obj2->vel,
+						hit1, hit2, &obj->r_vel, &obj2->r_vel,obj->m,obj2->m))
+					{
+						// 効果音を鳴らす
+						PlaySoundMem(g_sound_hit, DX_PLAYTYPE_BACK);
+						if (GetRand(10) == 0)
+							// たまに別の音を混ぜる
+							PlaySoundMem(g_sounds[GetRand(NUM_SOUNDS - 1)], DX_PLAYTYPE_BACK);
+					}
+				}
+			}
+		}
+	}
+
+	m_input_old = GetMouseInput();
+}
+void RenderKamesutarStrike(void)
+{
+	// 背景を白で塗る
+	SetDrawBright(255, 255, 255);
+	DrawBox(SCREEN_LEFT, SCREEN_TOP, SCREEN_RIGHT, SCREEN_BOTTOM, COLOR_WHITE, TRUE);
+
+	// オブジェクト描画処理
+	for (int i = 0; i < NUM_OBJECTS; i++)
+	{
+		// ポインタに代入
+		GameObject *obj = &g_objects[i];
+
+		// オブジェクト背景(コウラ)の色を指定
+		SetDrawBright(obj->color.r, obj->color.g, obj->color.b);
+		// オブジェクト背景描画
+		DrawRectRotaGraph(
+			(int)obj->pos.x, (int)obj->pos.y,
+			(int)obj->sprite_back.pos.x, (int)obj->sprite_back.pos.y,
+			(int)obj->sprite_back.size.x, (int)obj->sprite_back.size.y,
+			obj->scale,
+			(double)obj->rota,
+			obj->sprite_back.texture,
+			TRUE
+		);
+
+		SetDrawBright(255, 255, 255);
+		// オブジェクト前景描画
+		DrawRectRotaGraph(
+			(int)obj->pos.x, (int)obj->pos.y,
+			(int)obj->sprite_front.pos.x, (int)obj->sprite_front.pos.y,
+			(int)obj->sprite_front.size.x, (int)obj->sprite_front.size.y,
+			obj->scale,
+			(double)obj->rota,
+			obj->sprite_front.texture,
+			TRUE
+		);
+
+		if ((mouse_input == MOUSE_INPUT_LEFT))
+		{
+			DrawCircle(mpoint1.x, mpoint1.y, 5, COLOR_RED);
+			DrawArrow(Vect2Add(&mpoint1, &Vect2Sub(&mpoint1, &mouse)), mouse, COLOR_RED);
+		}
+	}
+}
+
 // ゲームの更新処理
 void UpdateGame(void)
 {
 	//Update2();
-	UpdateKame();
+	//UpdateKame();
+	UpdateKamesutarStrike();
 }
 
 // ゲームの描画処理
 void RenderGame(void)
 {
 	//Render2();
-	RenderKame();
+	//RenderKame();
+	RenderKamesutarStrike();
 }
 
 // ゲームの終了処理
@@ -433,4 +601,17 @@ void DrawBoxQuad(Vector2D pos, int siz_x, int siz_y, double rad, UINT color, int
 		p3.x, p3.y,
 		p4.x, p4.y,
 		color, fill);
+}
+
+void DrawArrow(Vector2D p1, Vector2D p2, UINT color)
+{
+	float rad = Vect2Angle(&Vect2Sub(&p2, &p1));
+	float deg = RAD_TO_DEG(rad);
+	Vector2D temp;
+	DrawLine(p1.x, p1.y, p2.x, p2.y, color, 2);
+	temp = Vect2Add(&p1, &Vect2Rota(&Vect2Create(60, 30), rad));
+	DrawLine(p1.x, p1.y, temp.x, temp.y, color, 2);
+	temp = Vect2Add(&p1, &Vect2Rota(&Vect2Create(60, -30), rad));
+	DrawLine(p1.x, p1.y, temp.x, temp.y, color, 2);
+
 }

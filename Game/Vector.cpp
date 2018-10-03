@@ -57,6 +57,24 @@ float Vect2Length(Vector2D vec)
 	return (sqrtf(vec.x * vec.x + vec.y * vec.y));
 }
 
+// 2Dベクトルの長さの二乗
+float Vect2LengthSquared(Vector2D* vec)
+{
+	return ((vec->x * vec->x) + (vec->y * vec->y));
+}
+
+// 2Dベクトル同士の距離
+float Vect2LengthTo(Vector2D* vec, Vector2D* other)
+{
+	return sqrtf(Vect2LengthSquaredTo(vec, other));
+}
+
+// 2Dベクトルの距離の二乗
+float Vect2LengthSquaredTo(Vector2D* vec, Vector2D* other)
+{
+	return (other->x - vec->x) * (other->x - vec->x) + (other->y - vec->y) * (other->y - vec->y);
+}
+
 // 2Dベクトルの正規化
 Vector2D Vect2Normalize(Vector2D vec)
 {
@@ -81,6 +99,7 @@ float Vect2Cross(Vector2D v0, Vector2D vec)
 	return ((v0.x * vec.x) - (v0.y * vec.y));
 }
 
+// 2Dベクトルを分解
 void Vect2Decompose(Vector2D* vec, Vector2D* angle, Vector2D* vec_a, Vector2D* vec_b)
 {
 	float angle_rota = Vect2Angle(angle);
@@ -95,4 +114,13 @@ void Vect2Decompose(Vector2D* vec, Vector2D* angle, Vector2D* vec_a, Vector2D* v
 
 	*vec_a = Vect2Create(vec_a_length * cosf(vec_a_rota), vec_a_length * sinf(vec_a_rota));
 	*vec_b = Vect2Create(vec_b_length * cosf(vec_b_rota), vec_b_length * sinf(vec_b_rota));
+}
+
+// 2Dベクトルの絶対値
+Vector2D Vect2AbsoluteValue(Vector2D* vec)
+{
+	Vector2D temp = *vec;
+	if (temp.x < 0)temp.x *= -1;
+	if (temp.y < 0)temp.y *= -1;
+	return temp;
 }

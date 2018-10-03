@@ -96,7 +96,8 @@ bool CircleColliAfterVel(Vector2D* pos1, Vector2D* pos2,
 }
 
 bool CircleColliAfterRotateVel(Vector2D* pos1, Vector2D* pos2,
-	Vector2D* vel1, Vector2D* vel2, float r1, float r2, float* r_v1, float* r_v2)
+	Vector2D* vel1, Vector2D* vel2, float r1, float r2,
+	float* r_v1, float* r_v2, float m1, float m2)
 {
 	if (CircleCollision(r1, r2, pos1->x, pos2->x, pos1->y, pos2->y))
 	{
@@ -110,6 +111,9 @@ bool CircleColliAfterRotateVel(Vector2D* pos1, Vector2D* pos2,
 
 		// 移動先の角度
 		Vector2D angle = Vect2Create(pos2->x - pos1->x, pos2->y - pos1->y);
+
+		// 質量 によって変わる？
+
 		{
 			// 分解後のベクトル
 			Vector2D vafter1_parallel, vafter2_parallel;	// 平行

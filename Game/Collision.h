@@ -12,4 +12,5 @@ bool CircleColliAfterVel(Vector2D* pos1, Vector2D* pos2, Vector2D* vel1, Vector2
 
 // ‰~“ñ‚Â‚ªÕ“Ë‚µ‚½‚çAŒ»À‚É‹ß‚¢“®‚«‚Å—£‚ê‚é
 bool CircleColliAfterRotateVel(Vector2D* pos1, Vector2D* pos2,
-	Vector2D* vel1, Vector2D* vel2, float r1, float r2, float* r_v1, float* r_v2);
+	Vector2D* vel1, Vector2D* vel2, float r1, float r2,
+	float* r_v1, float* r_v2, float m1, float m2);

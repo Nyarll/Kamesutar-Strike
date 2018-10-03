@@ -17,12 +17,12 @@
 // 定数の定義 ==============================================================
 
 // <システム> ----------------------------------------------------------
-#define GAME_TITLE "回転する Kame の当たり判定"        // ゲームタイトル
+#define GAME_TITLE "KAMESUTAR STRIKE !!"        // ゲームタイトル
 
 
 // <画面> --------------------------------------------------------------
-#define SCREEN_WIDTH    (640)                  // 画面の幅[pixel]
-#define SCREEN_HEIGHT   (480)                  // 画面の高さ[pixel]
+#define SCREEN_WIDTH    (1024)                  // 画面の幅[pixel]
+#define SCREEN_HEIGHT   (512 + 256)                  // 画面の高さ[pixel]
 
 #define SCREEN_TOP      (0)                    // 画面の上端
 #define SCREEN_BOTTOM   (SCREEN_HEIGHT)        // 画面の下端
