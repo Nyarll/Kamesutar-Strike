@@ -12,7 +12,7 @@
 
 // ヘッダファイルの読み込み ================================================
 #include "GameMain.h"
-#include "Vector.h"
+#include "GameObject.h"
 #include "Collision.h"
 #include "../ScreenShot.h"
 #include <math.h>
@@ -50,37 +50,19 @@ typedef struct
 	float m;
 }Circle;
 
-// Kamesuta's
-// スプライト
 typedef struct
 {
-	HGRP texture;
+	Sprite sprite_front;
+	Sprite sprite_back;
 	Vector2D pos;
-	Vector2D size;
-} Sprite;
-
-// 色
-typedef struct
-{
-	int r, g, b;
-} Color;
-
-
-// オブジェクト
-typedef struct
-{
-	Sprite sprite_front;	// テクスチャ
-	Sprite sprite_back;		// テクスチャ
-	Vector2D pos;			// 中心
-	Vector2D vel;			// 移動速度
-	Color color;			// 色
-	float r_vel;			// 回転速度 / NEW !!!
-	float rota;				// 回転
-	float scale;			// 倍率
-	Vector2D hitsize;		// 半径とか
-
-	float m;				// 質量
-} GameObject;
+	Vector2D vel;
+	Color color;
+	float rota;
+	float scale;
+	float r_vel;
+	float m;
+	Vector2D hitsize;
+} KameObject;
 
 // グローバル変数の定義 ====================================================
 Vector2D mouse;
@@ -103,7 +85,7 @@ HGRP g_texture_front;
 HGRP g_texture_back;
 
 // オブジェクト
-GameObject g_objects[NUM_OBJECTS];
+KameObject g_objects[NUM_OBJECTS];
 
 // たまになるサウンド
 HSND g_sounds[NUM_SOUNDS];
@@ -113,6 +95,24 @@ HSND g_sound_hit;
 int mouse_input;
 Vector2D mpoint1;
 short strike;
+
+
+// 3
+Vector2D pos1, pos2;
+Circle locus;
+static const float sc_left = (float)(SCREEN_CENTER_X / 2);
+static const float sc_right = (float)(sc_left * 3);
+static const float sc_top = (float)(SCREEN_CENTER_Y / 2);
+static const float sc_bottom = (float)(sc_top * 3);
+
+typedef enum
+{
+	TOP,
+	BOTTOM,
+	LEFT,
+	RIGHT,
+	VIEW_LINE_MAX
+}ViewLine;
 
 // プロトタイプ宣言 ========================================================
 
@@ -126,9 +126,6 @@ void Render1(void);
 
 void Update2(void);
 void Render2(void);
-
-void DrawBoxQuad(Vector2D pos, int siz_x, int siz_y, double rad, UINT color, int fill);
-void DrawArrow(Vector2D p1, Vector2D p2, UINT color);
 
 // Kamesuta系
 void InitKame(void);
@@ -159,13 +156,11 @@ void InitKame(void)
 	for (int i = 0; i < NUM_OBJECTS; i++)
 	{
 		// ポインタに代入
-		GameObject *obj = &g_objects[i];
+		KameObject *obj = &g_objects[i];
 
-		obj->sprite_front.texture = g_texture_front;
-		obj->sprite_front.pos = { 0, 0 };
-		obj->sprite_front.size = { IMAGE_SIZE, IMAGE_SIZE };
-		obj->sprite_back = obj->sprite_front;
-		obj->sprite_back.texture = g_texture_back;
+		obj->sprite_front = Sprite_Create(&g_texture_front, { 0,0 }, { IMAGE_SIZE, IMAGE_SIZE });
+		obj->sprite_back = Sprite_Create(&g_texture_back, { 0,0 }, { IMAGE_SIZE, IMAGE_SIZE });
+
 		obj->pos = { (float)GetRand(SCREEN_WIDTH), (float)GetRand(SCREEN_HEIGHT) };
 		obj->vel = { 0,0 };
 		obj->color = { GetRand(255), GetRand(255), GetRand(255) };
@@ -180,22 +175,57 @@ void InitKame(void)
 			obj->m = obj->hitsize.x / 10;
 	}
 
+	for (int i = 0; i < NUM_OBJECTS; i++)
+	{
+		KameObject *obj = &g_objects[i];
+		for (int j = 0; j < NUM_OBJECTS; j++)
+		{
+			KameObject *obj2 = &g_objects[j];
+
+			if (i != j)
+			{
+				while (1)
+				{
+					if (CircleCollision(obj->hitsize.x / 2, obj2->hitsize.x / 2, obj->pos.x, obj2->pos.x, obj->pos.y, obj2->pos.y))
+					{
+						obj2->pos = { (float)GetRand(SCREEN_WIDTH), (float)GetRand(SCREEN_HEIGHT) };
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+		}
+	}
+
 	strike = FALSE;
+}
+
+void Init3(void)
+{
+	pos1 = Vect2Create(SCREEN_CENTER_X, SCREEN_CENTER_Y);
+	pos2 = Vect2Create((SCREEN_CENTER_X / 2), (SCREEN_CENTER_X / 2));
+
+	locus.pos = pos1;
+	locus.r = Vect2Length(pos2);
 }
 
 // ゲームの初期化処理
 void InitializeGame(void)
 {
-	circle_pos = Vect2Create(100, 0);
+	/*circle_pos = Vect2Create(100, 0);
 	box_pos = Vect2Create(SCREEN_CENTER_X, SCREEN_CENTER_Y);
 	box_angle = 0;
 
 	c[0].pos = { 60, 60 };	c[1].pos = { SCREEN_RIGHT - 60, SCREEN_BOTTOM - 60 };
 	c[0].vel = { 5,1 };		c[1].vel = { -3,-2 };
 	c[0].r = 30;			c[1].r = 50;
-	c[0].m = 3;				c[1].m = 5;
+	c[0].m = 3;				c[1].m = 5;*/
 
-	InitKame();
+	//InitKame();
+
+	Init3();
 }
 
 void Update1(void)
@@ -297,7 +327,7 @@ void UpdateKame(void)
 	for (int i = 0; i < NUM_OBJECTS; i++)
 	{
 		// ポインタに代入
-		GameObject *obj = &g_objects[i];
+		KameObject *obj = &g_objects[i];
 
 		// 座標更新
 		{
@@ -313,12 +343,12 @@ void UpdateKame(void)
 				{
 					if (i != j)
 					{
-						GameObject* obj2 = &g_objects[j];
+						KameObject* obj2 = &g_objects[j];
 						float hit1 = obj->hitsize.x / 2;
 						float hit2 = obj2->hitsize.x / 2;
 						//if (CircleColliAfterVel(&obj->pos, &obj2->pos, &obj->vel, &obj2->vel, hit1, hit2))
 						if (CircleColliAfterRotateVel(&obj->pos, &obj2->pos, &obj->vel, &obj2->vel,
-							hit1, hit2, &obj->r_vel, &obj2->r_vel,obj->m,obj2->m))
+							hit1, hit2, &obj->r_vel, &obj2->r_vel, obj->m, obj2->m))
 						{
 							// 効果音を鳴らす
 							PlaySoundMem(g_sound_hit, DX_PLAYTYPE_BACK);
@@ -381,7 +411,7 @@ void RenderKame(void)
 	for (int i = 0; i < NUM_OBJECTS; i++)
 	{
 		// ポインタに代入
-		GameObject *obj = &g_objects[i];
+		KameObject *obj = &g_objects[i];
 
 		// オブジェクト背景(コウラ)の色を指定
 		SetDrawBright(obj->color.r, obj->color.g, obj->color.b);
@@ -428,7 +458,7 @@ void UpdateKamesutarStrike(void)
 
 	for (int i = 0; i < NUM_OBJECTS; i++)
 	{
-		GameObject* obj = &g_objects[i];
+		KameObject* obj = &g_objects[i];
 
 		if (CircleCollision(1, obj->hitsize.x / 2, mpoint1.x, obj->pos.x, mpoint1.y, obj->pos.y))
 		{
@@ -451,7 +481,7 @@ void UpdateKamesutarStrike(void)
 			Vector2D temp = Vect2AbsoluteValue(&obj->vel);
 			if (temp.x < 0.1f)obj->vel.x = 0.0f;
 			if (temp.y < 0.1f)obj->vel.y = 0.0f;
-			
+
 			obj->pos = Vect2Add(&obj->pos, &obj->vel);
 			obj->rota += obj->r_vel;
 		}
@@ -495,12 +525,12 @@ void UpdateKamesutarStrike(void)
 			{
 				if (i != j)
 				{
-					GameObject* obj2 = &g_objects[j];
+					KameObject* obj2 = &g_objects[j];
 					float hit1 = obj->hitsize.x / 2;
 					float hit2 = obj2->hitsize.x / 2;
 					//if (CircleColliAfterVel(&obj->pos, &obj2->pos, &obj->vel, &obj2->vel, hit1, hit2))
 					if (CircleColliAfterRotateVel(&obj->pos, &obj2->pos, &obj->vel, &obj2->vel,
-						hit1, hit2, &obj->r_vel, &obj2->r_vel,obj->m,obj2->m))
+						hit1, hit2, &obj->r_vel, &obj2->r_vel, obj->m, obj2->m))
 					{
 						// 効果音を鳴らす
 						PlaySoundMem(g_sound_hit, DX_PLAYTYPE_BACK);
@@ -525,32 +555,24 @@ void RenderKamesutarStrike(void)
 	for (int i = 0; i < NUM_OBJECTS; i++)
 	{
 		// ポインタに代入
-		GameObject *obj = &g_objects[i];
+		KameObject *obj = &g_objects[i];
 
 		// オブジェクト背景(コウラ)の色を指定
 		SetDrawBright(obj->color.r, obj->color.g, obj->color.b);
+		obj->sprite_back.pos = obj->pos;
+		obj->sprite_back.size = obj->hitsize;
+		obj->sprite_back.scale = obj->scale;
+		obj->sprite_back.rota = obj->rota;
 		// オブジェクト背景描画
-		DrawRectRotaGraph(
-			(int)obj->pos.x, (int)obj->pos.y,
-			(int)obj->sprite_back.pos.x, (int)obj->sprite_back.pos.y,
-			(int)obj->sprite_back.size.x, (int)obj->sprite_back.size.y,
-			obj->scale,
-			(double)obj->rota,
-			obj->sprite_back.texture,
-			TRUE
-		);
+		Sprite_DrawRotaSprite(&obj->sprite_back);
 
 		SetDrawBright(255, 255, 255);
+		obj->sprite_front.pos = obj->pos;
+		obj->sprite_front.size = obj->hitsize;
+		obj->sprite_front.scale = obj->scale;
+		obj->sprite_front.rota = obj->rota;
 		// オブジェクト前景描画
-		DrawRectRotaGraph(
-			(int)obj->pos.x, (int)obj->pos.y,
-			(int)obj->sprite_front.pos.x, (int)obj->sprite_front.pos.y,
-			(int)obj->sprite_front.size.x, (int)obj->sprite_front.size.y,
-			obj->scale,
-			(double)obj->rota,
-			obj->sprite_front.texture,
-			TRUE
-		);
+		Sprite_DrawRotaSprite(&obj->sprite_front);
 
 		if ((mouse_input == MOUSE_INPUT_LEFT))
 		{
@@ -560,12 +582,58 @@ void RenderKamesutarStrike(void)
 	}
 }
 
+void Update3(void)
+{
+
+}
+void Render3(void)
+{
+	int mx, my;
+	GetMousePoint(&mx, &my);
+	mouse.x = (float)mx;	mouse.y = (float)my;
+
+	DrawBox(0, 0, SCREEN_RIGHT, SCREEN_BOTTOM, COLOR_WHITE, TRUE);
+
+	Vector2D temp = mouse;//Vect2Add(&pos1, &pos2);
+
+	DrawCircle(pos1.x, pos1.y, 6, COLOR_BLUE, TRUE);
+	DrawCircle(temp.x, temp.y, 6, COLOR_BLUE, TRUE);
+	DrawLine(pos1.x, pos1.y, temp.x, temp.y, COLOR_BLUE);
+
+	Line pline;
+	pline.s = pos1;	pline.g = temp;
+	Line line[4];
+	line[TOP].s = Vect2Create(sc_left, sc_top);			line[TOP].g = Vect2Create(sc_right, sc_top);
+	line[BOTTOM].s = Vect2Create(sc_left, sc_bottom);	line[BOTTOM].g = Vect2Create(sc_right, sc_bottom);
+	line[LEFT].s = Vect2Create(sc_left, sc_top);		line[LEFT].g = Vect2Create(sc_left, sc_bottom);
+	line[RIGHT].s = Vect2Create(sc_right, sc_top);		line[RIGHT].g = Vect2Create(sc_right, sc_bottom);
+
+	for (int i = 0; i < VIEW_LINE_MAX; i++)
+	{
+		Vector2D cross_pos = Vect2Create(0, 0);
+		float t1 = 0;
+
+		Vector2D v1n = Vect2Mul(&Vect2Normalize(Vect2Sub(&temp, &pos1)), t1);
+		if (CrossPoint(&pline, &line[i], &cross_pos))
+		{
+			DrawCircle(cross_pos.x, cross_pos.y, 6, COLOR_BLACK);
+			DrawFormatString(0, 0, COLOR_GREEN, "cross pos : x = %3.2f", cross_pos.x);
+			DrawFormatString(0, 20, COLOR_GREEN, "cross pos : y = %3.2f", cross_pos.y);
+		}
+	}
+
+	DrawCircle(locus.pos.x, locus.pos.y, locus.r, COLOR_RED, FALSE);
+	DrawBox(sc_left, sc_top, sc_right, sc_bottom, COLOR_RED, FALSE);
+
+}
+
 // ゲームの更新処理
 void UpdateGame(void)
 {
 	//Update2();
 	//UpdateKame();
-	UpdateKamesutarStrike();
+	//UpdateKamesutarStrike();
+	Update3();
 }
 
 // ゲームの描画処理
@@ -573,7 +641,8 @@ void RenderGame(void)
 {
 	//Render2();
 	//RenderKame();
-	RenderKamesutarStrike();
+	//RenderKamesutarStrike();
+	Render3();
 }
 
 // ゲームの終了処理
@@ -584,34 +653,6 @@ void FinalizeGame(void)
 
 
 // 以下オリジナル関数 --------------------------------------------------
-void DrawBoxQuad(Vector2D pos, int siz_x, int siz_y, double rad, UINT color, int fill)
-{
-	Vector2D p1;
-	p1 = Vect2Add(&pos, &Vect2Rota(&Vect2Create(-siz_x / 2, -siz_y / 2), rad));
-	Vector2D p2;
-	p2 = Vect2Add(&pos, &Vect2Rota(&Vect2Create(+siz_x / 2, -siz_y / 2), rad));
-	Vector2D p3;
-	p3 = Vect2Add(&pos, &Vect2Rota(&Vect2Create(+siz_x / 2, +siz_y / 2), rad));
-	Vector2D p4;
-	p4 = Vect2Add(&pos, &Vect2Rota(&Vect2Create(-siz_x / 2, +siz_y / 2), rad));
 
-	DrawQuadrangle(
-		p1.x, p1.y,
-		p2.x, p2.y,
-		p3.x, p3.y,
-		p4.x, p4.y,
-		color, fill);
-}
 
-void DrawArrow(Vector2D p1, Vector2D p2, UINT color)
-{
-	float rad = Vect2Angle(&Vect2Sub(&p2, &p1));
-	float deg = RAD_TO_DEG(rad);
-	Vector2D temp;
-	DrawLine(p1.x, p1.y, p2.x, p2.y, color, 2);
-	temp = Vect2Add(&p1, &Vect2Rota(&Vect2Create(60, 30), rad));
-	DrawLine(p1.x, p1.y, temp.x, temp.y, color, 2);
-	temp = Vect2Add(&p1, &Vect2Rota(&Vect2Create(60, -30), rad));
-	DrawLine(p1.x, p1.y, temp.x, temp.y, color, 2);
 
-}

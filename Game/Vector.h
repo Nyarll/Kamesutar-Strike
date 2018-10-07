@@ -1,8 +1,6 @@
 #pragma once
 
-#define __PI (3.141592653589793238)
-#define DEG_TO_RAD(DEG)	((DEG) * (__PI / 180.0))
-#define RAD_TO_DEG(RAD)	((RAD) * (180.0 / __PI))
+#include "Define.h"
 
 // 2D ベクトル
 typedef struct
@@ -16,6 +14,13 @@ typedef struct
 	float x, y, z;
 }Vector3D;
 
+// <Line>
+typedef struct
+{
+	Vector2D s;
+	Vector2D g;
+}Line;
+
 typedef Vector2D Point2D;
 typedef Vector3D Point3D;
 
@@ -28,11 +33,15 @@ Vector2D Vect2Add(Vector2D* vec1, const Vector2D* vec2);
 Vector2D Vect2Sub(Vector2D* vec1, const Vector2D* vec2);
 // 2Dベクトルの乗算 (定数倍)
 Vector2D Vect2Mul(Vector2D* vec1, const double num);
+// 2Dベクトルの乗算
+Vector2D Vect2MulVect(Vector2D* vec1, const Vector2D* vec2);
 // 2Dベクトルの除算
 Vector2D Vect2Div(Vector2D* vec1, const double num);
 
 // 2Dベクトルの角度
 float Vect2Angle(Vector2D* vec);
+// 2Dベクトル間の角度
+float Vect2Angle2(Vector2D* vec1, Vector2D* vec2);
 // 2Dベクトルを num の量回転させる
 Vector2D Vect2Rota(Vector2D* vec, const float r);
 
@@ -54,3 +63,5 @@ float Vect2Cross(Vector2D v0, Vector2D vec);
 void Vect2Decompose(Vector2D* vec, Vector2D* angle, Vector2D* vec_a, Vector2D* vec_b);
 // 2Dベクトルの絶対値
 Vector2D Vect2AbsoluteValue(Vector2D* vec);
+// 2つの線分(直線)の交点
+BOOL CrossPoint(Line* line1, Line* line2, Vector2D* out_cross_point);

@@ -67,6 +67,9 @@
     <ClCompile Include="Game\ScreenShot.cpp">
       <Filter>ゲーム</Filter>
     </ClCompile>
+    <ClCompile Include="Game\GameObject.cpp">
+      <Filter>ゲーム</Filter>
+    </ClCompile>
   </ItemGroup>
   <!-- ヘッダファイル -->
   <ItemGroup>
@@ -101,6 +104,12 @@
       <Filter>ゲーム</Filter>
     </ClInclude>
     <ClInclude Include="Game\ScreenShot.h">
+      <Filter>ゲーム</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Define.h">
+      <Filter>ゲーム</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\GameObject.h">
       <Filter>ゲーム</Filter>
     </ClInclude>
   </ItemGroup>

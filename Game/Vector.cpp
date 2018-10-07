@@ -1,6 +1,4 @@
 #include "Vector.h"
-#define _USE_MATH_DEFINES
-#include <math.h>
 
 // 2Dベクトルの作成
 Vector2D Vect2Create(float x, float y)
@@ -30,6 +28,16 @@ Vector2D Vect2Mul(Vector2D* vec1, const double num)
 	Vector2D v = { vec1->x * num, vec1->y * num };
 	return v;
 }
+
+// 2Dベクトルの乗算
+Vector2D Vect2MulVect(Vector2D* vec1, const Vector2D* vec2)
+{
+	Vector2D v = *vec1;
+	v.x *= vec2->x;
+	v.y *= vec2->y;
+	return v;
+}
+
 // 2Dベクトル同士の除算
 Vector2D Vect2Div(Vector2D* vec1, const double num)
 {
@@ -42,6 +50,15 @@ float Vect2Angle(Vector2D* vec)
 {
 	return atan2f(vec->y, vec->x);
 }
+
+// 2Dベクトル間の角度
+float Vect2Angle2(Vector2D* vec1, Vector2D* vec2)
+{
+	float rad = atan2(vec2->y - vec1->y, vec2->x - vec1->x);
+	
+	return rad;
+}
+
 // 2Dベクトルを　num の量だけ回転させる
 Vector2D Vect2Rota(Vector2D* vec, const float r)
 {
@@ -96,7 +113,7 @@ float Vect2Dot(Vector2D v0, Vector2D vec)
 // 2Dベクトル同士の外積
 float Vect2Cross(Vector2D v0, Vector2D vec)
 {
-	return ((v0.x * vec.x) - (v0.y * vec.y));
+	return (v0.x * vec.y - vec.x * v0.y);
 }
 
 // 2Dベクトルを分解
@@ -123,4 +140,27 @@ Vector2D Vect2AbsoluteValue(Vector2D* vec)
 	if (temp.x < 0)temp.x *= -1;
 	if (temp.y < 0)temp.y *= -1;
 	return temp;
+}
+
+BOOL CrossPoint(Line* line1, Line* line2, Vector2D* out_cross_point)
+{
+	Vector2D p1 = line1->s;
+	Vector2D p2 = line1->g;
+	Vector2D p3 = line2->s;
+	Vector2D p4 = line2->g;
+
+	float d = (p2.x - p1.x)*(p4.y - p3.y) - (p2.y - p1.y)*(p4.x - p3.x);
+	if (d == 0)
+		return FALSE;
+	float u = ((p3.x - p1.x)*(p4.y - p3.y) - (p3.y - p1.y)*(p4.x - p3.x)) / d;
+	float v = ((p3.x - p1.x)*(p2.y - p1.y) - (p3.y - p1.y)*(p2.x - p1.x)) / d;
+	if (u < 0.0 || u > 1.0)
+		return FALSE;
+	if (v < 0.0 || v > 1.0)
+		return FALSE;
+	float outx = p1.x + u * (p2.x - p1.x);
+	float outy = p1.y + u * (p2.y - p1.y);
+	*out_cross_point = Vect2Create(outx, outy);
+
+	return TRUE;
 }

@@ -1,6 +1,5 @@
-
 #include "Collision.h"
-#include <math.h>
+
 
 //‰~“¯m‚ÌÕ“Ë
 //(‰~1‚Ì”¼Œa, ‰~2‚Ì”¼Œa, ‰~1‚ÌxÀ•W, ‰~2‚ÌxÀ•W, ‰~1‚ÌyÀ•W, ‰~2‚ÌyÀ•W)
@@ -46,25 +45,6 @@ BOOL BoxCollision(double x1, double y1, double size_x1, double size_y1,
 }
 
 
-// ü•ª‚ÌÕ“Ë
-// a1	b1
-// |	
-// |	|
-// |	|
-// |
-// a2	b2
-BOOL LineCollision(double line_a1, double line_a2, double line_b1, double line_b2)
-{
-	if ((line_a1 < line_b1) && (line_a2 > line_b2))
-	{
-		return TRUE;
-	}
-	else
-	{
-		return FALSE;
-	}
-}
-
 bool CircleColliAfterVel(Vector2D* pos1, Vector2D* pos2,
 	Vector2D* vel1, Vector2D* vel2, float r1, float r2)
 {
@@ -99,6 +79,8 @@ bool CircleColliAfterRotateVel(Vector2D* pos1, Vector2D* pos2,
 	Vector2D* vel1, Vector2D* vel2, float r1, float r2,
 	float* r_v1, float* r_v2, float m1, float m2)
 {
+	float e = 1.0f;	// ”½”­ŒW”
+
 	if (CircleCollision(r1, r2, pos1->x, pos2->x, pos1->y, pos2->y))
 	{
 		// 2 ƒtƒŒ[ƒ€ ‘O‚Ì Position
@@ -112,8 +94,6 @@ bool CircleColliAfterRotateVel(Vector2D* pos1, Vector2D* pos2,
 		// ˆÚ“®æ‚ÌŠp“x
 		Vector2D angle = Vect2Create(pos2->x - pos1->x, pos2->y - pos1->y);
 
-		// ¿—Ê ‚É‚æ‚Á‚Ä•Ï‚í‚éH
-
 		{
 			// •ª‰ğŒã‚ÌƒxƒNƒgƒ‹
 			Vector2D vafter1_parallel, vafter2_parallel;	// •½s
@@ -124,8 +104,11 @@ bool CircleColliAfterRotateVel(Vector2D* pos1, Vector2D* pos2,
 			Vect2Decompose(&vbefore2, &angle, &vafter2_parallel, &vafter2_vertical);
 
 			// Õ“ËŒã‚ğ‡¬‚µ‚Ä‹‚ß‚é
-			*vel1 = Vect2Add(&vafter2_parallel, &vafter1_vertical);
-			*vel2 = Vect2Add(&vafter1_parallel, &vafter2_vertical);
+
+			Vector2D vafter1 = Vect2Add(&vafter2_parallel, &vafter1_vertical);
+			Vector2D vafter2 = Vect2Add(&vafter1_parallel, &vafter2_vertical);
+			*vel1 = vafter1;
+			*vel2 = vafter2;
 
 			*pos1 = before_pos1;
 			*pos2 = before_pos2;
